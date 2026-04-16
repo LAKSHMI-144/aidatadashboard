@@ -1,5 +1,9 @@
 {
   "version": 2,
+  "buildCommand": "cd ai-dashboard && npm run build",
+  "outputDirectory": "ai-dashboard/build",
+  "installCommand": "cd ai-dashboard && npm install",
+  "framework": null,
   "builds": [
     {
       "src": "ai-dashboard/package.json",
@@ -11,8 +15,12 @@
   ],
   "routes": [
     {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/ai-dashboard/$1"
+      "dest": "/index.html"
     }
   ]
 }
