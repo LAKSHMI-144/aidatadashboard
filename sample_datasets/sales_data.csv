@@ -1,0 +1,13 @@
+Product,Sales,Region,Quarter
+Laptop,1500,North,Q1
+Phone,1200,South,Q1
+Tablet,800,East,Q1
+Monitor,600,West,Q1
+Laptop,1800,North,Q2
+Phone,1400,South,Q2
+Tablet,900,East,Q2
+Monitor,700,West,Q2
+Laptop,2000,North,Q3
+Phone,1600,South,Q3
+Tablet,1000,East,Q3
+Monitor,800,West,Q3

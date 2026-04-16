@@ -1,0 +1,11 @@
+Item,Category,Quantity,Price,Supplier,ReorderLevel
+Laptop,Electronics,45,1200.00,TechSupply,20
+Mouse,Electronics,120,25.00,OfficeDepot,50
+Keyboard,Electronics,80,75.00,TechSupply,30
+Monitor,Electronics,35,300.00,TechSupply,15
+Desk,Furniture,25,250.00,FurniturePlus,10
+Chair,Furniture,40,150.00,FurniturePlus,20
+Paper,Office,200,15.00,OfficeDepot,100
+Pen,Office,500,2.00,OfficeDepot,200
+Printer,Electronics,12,450.00,TechSupply,5
+Table,Furniture,15,180.00,FurniturePlus,8

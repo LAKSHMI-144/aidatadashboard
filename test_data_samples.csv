@@ -1,0 +1,11 @@
+Product,Sales,Region,Category
+Laptop,1200,North,Electronics
+Phone,800,South,Electronics
+Tablet,600,East,Electronics
+Monitor,400,West,Electronics
+Keyboard,150,North,Accessories
+Mouse,75,South,Accessories
+Headphones,200,East,Accessories
+Camera,900,West,Electronics
+Speaker,300,North,Electronics
+Charger,50,South,Accessories

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend API Testing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .chart-container {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Data Dashboard - Frontend API Testing</h1>
+    
+    <div class="test-section">
+        <h2>Backend Connection Test</h2>
+        <button class="test-button" onclick="testConnection()">Test Backend Connection</button>
+        <div id="connection-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>CSV Upload Test</h2>
+        <input type="file" id="csvFile" accept=".csv">
+        <button class="test-button" onclick="testUpload()">Upload CSV</button>
+        <div id="upload-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Chart Data Test</h2>
+        <button class="test-button" onclick="testChart()">Get Chart Data</button>
+        <div id="chart-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>AI Analysis Test</h2>
+        <button class="test-button" onclick="testAI()">Get AI Analysis</button>
+        <div id="ai-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Complete Flow Test</h2>
+        <button class="test-button" onclick="testCompleteFlow()">Run Complete Test</button>
+        <div id="complete-result"></div>
+    </div>
+
+    <div class="chart-container">
+        <h2>Chart Rendering Test</h2>
+        <canvas id="testChart"></canvas>
+        <div id="chart-status"></div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:8080';
+        
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        function showLoading(elementId) {
+            showResult(elementId, 'Testing...', 'info');
+        }
+
+        async function testConnection() {
+            showLoading('connection-result');
+            
+            try {
+                const response = await fetch(`${BASE_URL}/`, { 
+                    method: 'GET',
+                    timeout: 5000 
+                });
+                
+                if (response.status === 200 || response.status === 404) {
+                    showResult('connection-result', 
+                        `PASS: Backend is running (status: ${response.status_code})`, 'pass');
+                } else {
+                    showResult('connection-result', 
+                        `FAIL: Unexpected status: ${response.status}`, 'fail');
+                }
+            } catch (error) {
+                showResult('connection-result', 
+                    `FAIL: Cannot connect to backend: ${error.message}`, 'fail');
+            }
+        }
+
+        async function testUpload() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showResult('upload-result', 'FAIL: Please select a CSV file first', 'fail');
+                return;
+            }
+
+            showLoading('upload-result');
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch(`${BASE_URL}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.text();
+                
+                if (response.ok) {
+                    showResult('upload-result', 
+                        `PASS: Upload successful\nResponse: ${result}`, 'pass');
+                } else {
+                    showResult('upload-result', 
+                        `FAIL: Upload failed (status: ${response.status})\nResponse: ${result}`, 'fail');
+                }
+            } catch (error) {
+                showResult('upload-result', 
+                    `FAIL: Upload error: ${error.message}`, 'fail');
+            }
+        }
+
+        async function testChart() {
+            showLoading('chart-result');
+
+            try {
+                const response = await fetch(`${BASE_URL}/chart`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    let message = `PASS: Chart data received\n`;
+                    message += `Labels: ${JSON.stringify(data.labels, null, 2)}\n`;
+                    message += `Values: ${JSON.stringify(data.values, null, 2)}`;
+                    
+                    showResult('chart-result', message, 'pass');
+                    
+                    // Test chart rendering
+                    renderTestChart(data);
+                } else {
+                    showResult('chart-result', 
+                        `FAIL: Chart endpoint failed (status: ${response.status})`, 'fail');
+                }
+            } catch (error) {
+                showResult('chart-result', 
+                    `FAIL: Chart endpoint error: ${error.message}`, 'fail');
+            }
+        }
+
+        async function testAI() {
+            showLoading('ai-result');
+
+            try {
+                const response = await fetch(`${BASE_URL}/query`);
+                const result = await response.text();
+
+                if (response.ok) {
+                    showResult('ai-result', 
+                        `PASS: AI analysis successful\nAnalysis: ${result}`, 'pass');
+                } else {
+                    showResult('ai-result', 
+                        `FAIL: AI query failed (status: ${response.status})\nResponse: ${result}`, 'fail');
+                }
+            } catch (error) {
+                showResult('ai-result', 
+                    `FAIL: AI query error: ${error.message}`, 'fail');
+            }
+        }
+
+        async function testCompleteFlow() {
+            showLoading('complete-result');
+            
+            let message = 'COMPLETE FLOW TEST:\n\n';
+            let allPassed = true;
+
+            try {
+                // Step 1: Test connection
+                message += 'Step 1: Testing connection...\n';
+                const connResponse = await fetch(`${BASE_URL}/`);
+                if (connResponse.status === 200 || connResponse.status === 404) {
+                    message += 'PASS: Backend connection\n';
+                } else {
+                    message += 'FAIL: Backend connection\n';
+                    allPassed = false;
+                }
+
+                // Step 2: Upload CSV (if file selected)
+                const fileInput = document.getElementById('csvFile');
+                const file = fileInput.files[0];
+                if (file) {
+                    message += '\nStep 2: Uploading CSV...\n';
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    const uploadResponse = await fetch(`${BASE_URL}/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (uploadResponse.ok) {
+                        message += 'PASS: CSV upload\n';
+                    } else {
+                        message += 'FAIL: CSV upload\n';
+                        allPassed = false;
+                    }
+                } else {
+                    message += '\nStep 2: Skipped (no file selected)\n';
+                }
+
+                // Step 3: Get chart data
+                message += '\nStep 3: Getting chart data...\n';
+                const chartResponse = await fetch(`${BASE_URL}/chart`);
+                if (chartResponse.ok) {
+                    const chartData = await chartResponse.json();
+                    message += `PASS: Chart data (${chartData.labels.length} points)\n`;
+                } else {
+                    message += 'FAIL: Chart data\n';
+                    allPassed = false;
+                }
+
+                // Step 4: Get AI analysis
+                message += '\nStep 4: Getting AI analysis...\n';
+                const aiResponse = await fetch(`${BASE_URL}/query`);
+                if (aiResponse.ok) {
+                    const aiResult = await aiResponse.text();
+                    message += `PASS: AI analysis (${aiResult.length} chars)\n`;
+                } else {
+                    message += 'FAIL: AI analysis\n';
+                    allPassed = false;
+                }
+
+                message += `\nOverall: ${allPassed ? 'PASS' : 'FAIL'}`;
+                
+                showResult('complete-result', message, allPassed ? 'pass' : 'fail');
+                
+            } catch (error) {
+                showResult('complete-result', 
+                    `FAIL: Complete flow error: ${error.message}`, 'fail');
+            }
+        }
+
+        function renderTestChart(data) {
+            const canvas = document.getElementById('testChart');
+            const ctx = canvas.getContext('2d');
+            const statusDiv = document.getElementById('chart-status');
+
+            if (!data.labels || !data.values || data.labels.length === 0) {
+                statusDiv.innerHTML = '<div class="result fail">No data to render chart</div>';
+                return;
+            }
+
+            try {
+                // Simple bar chart rendering
+                const width = canvas.width = 600;
+                const height = canvas.height = 300;
+                const padding = 40;
+                const barWidth = (width - 2 * padding) / data.labels.length;
+                const maxValue = Math.max(...data.values);
+                const scale = (height - 2 * padding) / maxValue;
+
+                // Clear canvas
+                ctx.clearRect(0, 0, width, height);
+
+                // Draw bars
+                data.labels.forEach((label, index) => {
+                    const value = data.values[index];
+                    const barHeight = value * scale;
+                    const x = padding + index * barWidth;
+                    const y = height - padding - barHeight;
+
+                    // Draw bar
+                    ctx.fillStyle = '#9d4edd';
+                    ctx.fillRect(x + 5, y, barWidth - 10, barHeight);
+
+                    // Draw label
+                    ctx.fillStyle = '#333';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(label, x + barWidth / 2, height - 10);
+
+                    // Draw value
+                    ctx.fillText(value.toString(), x + barWidth / 2, y - 5);
+                });
+
+                statusDiv.innerHTML = `<div class="result pass">Chart rendered successfully with ${data.labels.length} data points</div>`;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="result fail">Chart rendering error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run connection test on page load
+        window.onload = function() {
+            testConnection();
+        };
+    </script>
+</body>
+</html>
